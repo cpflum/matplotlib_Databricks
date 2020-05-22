@@ -1,0 +1,34 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from datetime import date
+from pyspark.sql import SparkSession
+from pyspark.sql.functions  import date_format
+spark = SparkSession.builder.appName('LogRegProj').getOrCreate()
+
+#load the data from Databricks
+df = sqlContext.sql('select * from udow__3_mo_2de77_csv')
+
+# format the date column
+df2 = df.withColumn('datestring',date_format(df['date'], "yyyy MM dd"))
+pricedate = df2.select('date').collect()
+close = df2.select('close').collect()
+predicted_close = df2.select('predicted_close').collect()
+
+# pull the date, stock price and predicted price from the DF, convert to a list of dictionary values, and then extract the values
+x=0
+for item in pricedate:
+  pricedate[x] = pricedate[x].asDict()
+  close[x] = close[x].asDict()
+  predicted_close[x] = predicted_close[x].asDict()
+  pricedate[x]= pricedate[x]['date']
+  close[x]= close[x]['close']
+  predicted_close[x]= predicted_close[x]['predicted_close']
+  x+=1
+
+# plot the data
+plt.figure(figsize=(20,6))
+plt.plot(pricedate, close, 'b+-')
+plt.plot(pricedate, predicted_close, 'r+-')
+#plt.xticks(np.arange(min(x), max(x)+1, 20.0))
+plt.xticks(rotation=90)
+plt.show()
